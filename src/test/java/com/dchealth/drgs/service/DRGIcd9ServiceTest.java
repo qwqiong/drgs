@@ -6,16 +6,15 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = DrgsApplication.class,webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class MDCServiceTest {
-    @Autowired
-    private MDCService mdcService;
+class DRGIcd9ServiceTest {
 
+    @Autowired
+    private DRGIcd9Service drgIcd9Service;
 
     @Test
-    void extractMDCInfo() {
-        mdcService.extractMDCInfo("C:\\Users\\qwqiong\\test.pdf",34,912);
+    void extractDrgIcd9Info() {
+        drgIcd9Service.extractDrgIcd9Info("C:\\Users\\qwqiong\\test.pdf",617,618);
     }
 }
