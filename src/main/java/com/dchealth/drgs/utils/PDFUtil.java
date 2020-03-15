@@ -1,48 +1,77 @@
 package com.dchealth.drgs.utils;
 
-import com.alibaba.druid.util.StringUtils;
-import com.dchealth.drgs.db.entity.DrgIcdR;
-import com.dchealth.drgs.db.entity.DrgInfo;
 import com.dchealth.drgs.db.repository.DrgInfoRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spire.pdf.PdfDocument;
 import com.spire.pdf.PdfPageBase;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Component
+@Slf4j
 public class PDFUtil {
     @Autowired
     private DrgInfoRepository drgInfoRepository;
+
     /**
-     * 获取指定页码的字符串列表
+     * 获取指定页码范围的字符串列表
      *
      * @param filePath
      * @param startPage
      * @param endPage
      * @return
      */
-    private static List<String> getLineList(String filePath, int startPage, int endPage) {
+    public static List<String> getLineList(String filePath, int startPage, int endPage) {
+        //遍历PDF页面，获取每个页面的文本并添加到StringBuilder对象
+        List<String> lineList = new LinkedList<>();
+        int pageSize = getPageSize(filePath);
+        if(startPage<=pageSize&&endPage<=pageSize);
+        for (int i = startPage - 1; i < endPage - 1; i++) {
+            lineList.addAll(getLineList(filePath,i));
+        }
+        return lineList;
+    }
+
+    /**
+     * 获取指定页码的数据
+     *
+     * @param filePath
+     * @param pageNumber
+     * @return
+     */
+    public static List<String> getLineList(String filePath, int pageNumber) {
         //创建PdfDocument实例
         PdfDocument doc = new PdfDocument();
         //加载PDF文件
         doc.loadFromFile(filePath);
         //创建StringBuilder实例
         StringBuilder sb = new StringBuilder();
-        //遍历PDF页面，获取每个页面的文本并添加到StringBuilder对象
-        for (int i = startPage; i < endPage; i++) {
-            PdfPageBase page = doc.getPages().get(i);
-            sb.append(page.extractText());
-        }
+        PdfPageBase page = doc.getPages().get(pageNumber-1);
+        sb.append(page.extractText());
         List<String> lineList = Arrays.stream(sb.toString().split("\n|\r")).map(String::trim).collect(Collectors.toList());
         lineList = filterLine(lineList);
         return lineList;
+    }
+
+    /**
+     * 读取页数
+     *
+     * @param filePath
+     * @return
+     */
+    private static int getPageSize(String filePath) {
+        //创建PdfDocument实例
+        PdfDocument doc = new PdfDocument();
+        //加载PDF文件
+        doc.loadFromFile(filePath);
+        return doc.getPages().getCount();
     }
 
     /**
@@ -58,53 +87,6 @@ public class PDFUtil {
                         || line.contains("Evaluation Warning")))
                 .collect(Collectors.toList());
         return lineList;
-    }
-
-    /**
-     * 获取DRG信息
-     *
-     * @param line
-     * @throws JsonProcessingException
-     */
-    private static String getDrgInfoFromCatalog(String line) {
-        String lineWithDot = getRegexStr(line,"\\s+.*\\.{3,}");
-        lineWithDot = lineWithDot.replaceAll("\\.{3,}","");
-        return lineWithDot;
-    }
-
-    /**
-     * 获取MDC信息
-     *
-     * @param line
-     * @return
-     */
-    private static String getMDCInfoFromCataLog(String line) {
-        String[] mdcCodeArr = line.split("\\s+");
-        String mdcCode = mdcCodeArr[1].split("：")[1];
-        return mdcCode;
-    }
-
-    /**
-     * 提取Drg分组信息
-     */
-    public  void extractDrgInfo() {
-        List<String> lines = getLineList("C:\\Users\\qwqiong\\test.pdf", 4, 16);
-        String mdcCode = "   ";
-        List<DrgInfo> drgInfoList = new LinkedList<>();
-        for (String line : lines) {
-            if (line.contains("MDC") && !line.contains("主诊表，主诊编码")) {
-            } else if (line.contains("MDC")) {
-                mdcCode = getMDCInfoFromCataLog(line);
-            } else {
-                String drgCode = getRegexStr(line, "^[A-Z]{2}[0-9]");
-                if(!StringUtils.isEmpty(drgCode)){
-                    String drgName = getDrgInfoFromCatalog(line);
-                    System.out.println(mdcCode+" "+drgCode+" "+drgName);
-                    drgInfoList.add(DrgInfo.builder().drgCode(drgCode).drgNameCn(drgName).mdcInfo(mdcCode).build());
-                }
-            }
-        }
-        drgInfoRepository.saveAll(drgInfoList);
     }
 
     /**
@@ -124,9 +106,19 @@ public class PDFUtil {
         return str;
     }
 
-    public static void main(String... args) throws JsonProcessingException {
-        System.out.println("11111111");
+    /**
+     * 正则匹配
+     *
+     * @param text
+     * @param regex
+     * @return
+     */
+    public static boolean isMatch(String text, String regex) {
+        return Pattern.matches(regex, text);
     }
 
-
+    public static void main(String... args) {
+        List<String> stringList = getLineList("C:\\Users\\qwqiong\\test.pdf", 35);
+        stringList.forEach(log::info);
+    }
 }

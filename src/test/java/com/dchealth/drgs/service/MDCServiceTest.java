@@ -1,7 +1,6 @@
-package com.dchealth.drgs.utils;
+package com.dchealth.drgs.service;
 
 import com.dchealth.drgs.DrgsApplication;
-import com.dchealth.drgs.service.DRGService;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,12 +9,13 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = DrgsApplication.class,webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class PDFUtilTest {
+class MDCServiceTest {
     @Autowired
-    private DRGService drgService;
+    private MDCService mdcService;
+
 
     @Test
-    void extractDrgInfo() {
-        drgService.extractDrgInfo();
+    void extractMDCInfo() {
+        mdcService.extractMDCInfo("C:\\Users\\qwqiong\\test.pdf",34,912);
     }
 }

@@ -11,7 +11,7 @@ spring:
       password: 1234.Aaaa
   jpa:
     hibernate.ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5Dialect
